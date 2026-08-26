@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Board Games Arena — Ludo • Snakes & Ladders • Chess</title>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4565729826623337"
+     crossorigin="anonymous"></script>
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --card: #1a1a2e;
+    --accent: #e94560;
+    --accent2: #0f3460;
+    --text: #eaeaea;
+    --gold: #ffd700;
+    --green: #2ecc71;
+    --blue: #3498db;
+    --red: #e74c3c;
+    --yellow: #f1c40f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  h1, h2, h3 { font-weight: 700; }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  button:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  button:active { transform: translateY(0); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: 100vh; padding: 20px; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+
+  /* ===== MENU ===== */
+  #menu {
+    justify-content: center;
+    text-align: center;
+    gap: 30px;
+  }
+  #menu h1 {
+    font-size: 3rem;
+    background: linear-gradient(90deg, #e94560, #ffd700, #2ecc71);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+  }
+  #menu .subtitle { color: #aaa; margin-bottom: 40px; }
+  .game-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    max-width: 900px;
+  }
+  .game-card {
+    background: var(--card);
+    border: 2px solid #333;
+    border-radius: 16px;
+    padding: 28px 24px;
+    width: 260px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .game-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(233,69,96,0.3);
+  }
+  .game-card .icon { font-size: 3.5rem; margin-bottom: 12px; }
+  .game-card h2 { margin-bottom: 8px; }
+  .game-card p { color: #999; font-size: 0.9rem; }
+
+  /* ===== SETUP ===== */
+  #setup {
+    justify-content: center;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  #setup h2 { margin-bottom: 20px; }
+  .setup-box {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 28px;
+    width: 100%;
+    border: 1px solid #333;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .player-row label { min-width: 80px; }
+  .player-row select, .player-row input {
+    background: #222;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+  }
+  .color-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .btn-row { display: flex; gap: 12px; margin-top: 24px; justify-content: center; flex-wrap: wrap; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-secondary { background: #333; color: #fff; }
+  .btn-green { background: var(--green); color: #111; }
+
+  /* ===== GAME HEADER ===== */
+  .game-header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .game-header h2 { font-size: 1.5rem; }
+  .turn-info {
+    background: var(--card);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .status-bar {
+    background: var(--card);
+    padding: 10px 18px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    text-align: center;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* ===== LUDO ===== */
+  #ludo-board {
+    display: grid;
+    grid-template-columns: repeat(15, 28px);
+    grid-template-rows: repeat(15, 28px);
+    gap: 1px;
+    background: #222;
+    border: 4px solid #444;
+    border-radius: 8px;
+    margin: 0 auto;
+  }
+  .ludo-cell {
+    width: 28px; height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    font-size: 0.65rem;
+  }
+  .ludo-path { background: #f5f5f5; }
+  .ludo-red { background: #c0392b; }
+  .ludo-green { background: #27ae60; }
+  .ludo-yellow { background: #f1c40f; }
+  .ludo-blue { background: #2980b9; }
+  .ludo-home { background: #ddd; }
+  .ludo-center {
+    background: linear-gradient(135deg, #c0392b 25%, #27ae60 25% 50%, #f1c40f 50% 75%, #2980b9 75%);
+  }
+  .ludo-safe {
+    background: #ecf0f1;
+  }
+  .ludo-safe::after {
+    content: '★';
+    color: #888;
+    font-size: 10px;
+  }
+  .token {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid #111;
+    position: absolute;
+    z-index: 5;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    transition: transform 0.15s;
+  }
+  .token:hover { transform: scale(1.2); }
+  .token.red { background: #e74c3c; }
+  .token.green { background: #2ecc71; }
+  .token.yellow { background: #f1c40f; }
+  .token.blue { background: #3498db; }
+  .token.selected { box-shadow: 0 0 0 3px #fff, 0 0 10px #fff; }
+  .dice-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .dice {
+    width: 60px; height: 60px;
+    background: #fff;
+    color: #111;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: pointer;
+    user-select: none;
+  }
+  .dice.rolling { animation: shake 0.4s infinite; }
+  @keyframes shake {
+    0%,100% { transform: rotate(0); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+  }
+
+  /* ===== SNAKES & LADDERS ===== */
+  #snl-board {
+    display: grid;
+    grid-template-columns: repeat(10, 42px);
+    grid-template-rows: repeat(10, 42px);
+    gap: 2px;
+    background: #222;
+    border: 4px solid #444;
+    border-radius: 8px;
+    margin: 0 auto;
+  }
+  .snl-cell {
+    width: 42px; height: 42px;
+    background: #f8f9fa;
+    color: #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    position: relative;
+  }
+  .snl-cell.even { background: #e8f4e8; }
+  .snl-cell.snake-start { background: #ffcccc; }
+  .snl-cell.ladder-start { background: #cce5ff; }
+  .snl-token {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid #111;
+    position: absolute;
+    z-index: 5;
+  }
+  .snl-token.p1 { background: #e74c3c; top: 4px; left: 4px; }
+  .snl-token.p2 { background: #3498db; top: 4px; right: 4px; }
+  .snl-token.p3 { background: #2ecc71; bottom: 4px; left: 4px; }
+  .snl-token.p4 { background: #f1c40f; bottom: 4px; right: 4px; }
+
+  /* ===== CHESS ===== */
+  #chess-board {
+    display: grid;
+    grid-template-columns: repeat(8, 52px);
+    grid-template-rows: repeat(8, 52px);
+    border: 4px solid #555;
+    border-radius: 4px;
+    margin: 0 auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .chess-sq {
+    width: 52px; height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+  .chess-sq.light { background: #f0d9b5; }
+  .chess-sq.dark { background: #b58863; }
+  .chess-sq.selected { outline: 3px solid #e94560; outline-offset: -3px; }
+  .chess-sq.possible { background: rgba(46,204,113,0.55) !important; }
+  .chess-sq.last-move { background: rgba(241,196,15,0.45) !important; }
+  .chess-sq.check { background: rgba(231,76,60,0.6) !important; }
+  .chess-piece { cursor: grab; line-height: 1; }
+  .chess-piece.dragging { opacity: 0.5; }
+
+  /* ===== SIDE PANELS ===== */
+  .side-panel {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 16px;
+    max-width: 420px;
+    width: 100%;
+    border: 1px solid #333;
+  }
+  .player-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .player-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .player-badge.active { box-shadow: 0 0 0 2px #fff; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 500px) {
+    #ludo-board {
+      grid-template-columns: repeat(15, 20px);
+      grid-template-rows: repeat(15, 20px);
+    }
+    .ludo-cell { width: 20px; height: 20px; }
+    .token { width: 14px; height: 14px; }
+    #snl-board {
+      grid-template-columns: repeat(10, 32px);
+      grid-template-rows: repeat(10, 32px);
+    }
+    .snl-cell { width: 32px; height: 32px; font-size: 0.65rem; }
+    #chess-board {
+      grid-template-columns: repeat(8, 40px);
+      grid-template-rows: repeat(8, 40px);
+    }
+    .chess-sq { width: 40px; height: 40px; font-size: 1.7rem; }
+    #menu h1 { font-size: 2.2rem; }
+  }
+
+  .legend { font-size: 0.85rem; color: #aaa; margin-top: 10px; text-align: center; }
+  .win-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+  }
+  .win-box {
+    background: var(--card);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    border: 2px solid var(--gold);
+  }
+  .win-box h2 { font-size: 2rem; margin-bottom: 16px; color: var(--gold); }
+</style>
+</head>
+<body>
+
+<!-- ========== MENU ========== -->
+<div id="menu" class="screen active">
+  <h1>🎲 Board Games Arena</h1>
+  <p class="subtitle">Ludo • Snakes & Ladders • Chess — Play vs AI or Friends</p>
+  <div class="game-cards">
+    <div class="game-card" onclick="openSetup('ludo')">
+      <div class="icon">🎯</div>
+      <h2>Ludo</h2>
+      <p>Classic 4-player race. Get all tokens home!</p>
+    </div>
+    <div class="game-card" onclick="openSetup('snl')">
+      <div class="icon">🐍</div>
+      <h2>Snakes & Ladders</h2>
+      <p>Climb ladders, avoid snakes. First to 100 wins!</p>
+    </div>
+    <div class="game-card" onclick="openSetup('chess')">
+      <div class="icon">♟️</div>
+      <h2>Chess</h2>
+      <p>Full rules + AI opponent. Checkmate to win!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SETUP ========== -->
+<div id="setup" class="screen">
+  <h2 id="setup-title">Game Setup</h2>
+  <div class="setup-box" id="setup-content"></div>
+</div>
+
+<!-- ========== LUDO ========== -->
+<div id="ludo" class="screen">
+  <div class="game-header">
+    <button class="btn-secondary" onclick="backToMenu()">← Menu</button>
+    <h2>🎯 Ludo</h2>
+    <div class="turn-info" id="ludo-turn">Red's turn</div>
+  </div>
+  <div class="status-bar" id="ludo-status">Roll the dice!</div>
+  <div id="ludo-board"></div>
+  <div class="dice-box">
+    <div class="dice" id="ludo-dice" onclick="ludoRoll()">?</div>
+    <button class="btn-primary" id="ludo-roll-btn" onclick="ludoRoll()">Roll Dice</button>
+  </div>
+  <div class="side-panel">
+    <div class="player-list" id="ludo-players"></div>
+  </div>
+</div>
+
+<!-- ========== SNAKES & LADDERS ========== -->
+<div id="snl" class="screen">
+  <div class="game-header">
+    <button class="btn-secondary" onclick="backToMenu()">← Menu</button>
+    <h2>🐍 Snakes & Ladders</h2>
+    <div class="turn-info" id="snl-turn">Player 1</div>
+  </div>
+  <div class="status-bar" id="snl-status">Roll to start!</div>
+  <div id="snl-board"></div>
+  <div class="dice-box">
+    <div class="dice" id="snl-dice" onclick="snlRoll()">?</div>
+    <button class="btn-primary" id="snl-roll-btn" onclick="snlRoll()">Roll Dice</button>
+  </div>
+  <div class="side-panel">
+    <div class="player-list" id="snl-players"></div>
+    <p class="legend">🐍 Snake  🪜 Ladder</p>
+  </div>
+</div>
+
+<!-- ========== CHESS ========== -->
+<div id="chess" class="screen">
+  <div class="game-header">
+    <button class="btn-secondary" onclick="backToMenu()">← Menu</button>
+    <h2>♟️ Chess</h2>
+    <div class="turn-info" id="chess-turn">White to move</div>
+  </div>
+  <div class="status-bar" id="chess-status">Select a piece</div>
+  <div id="chess-board"></div>
+  <div class="side-panel">
+    <div class="player-list" id="chess-players"></div>
+    <div class="btn-row" style="margin-top:12px">
+      <button class="btn-secondary" onclick="chessUndo()" id="chess-undo">Undo</button>
+      <button class="btn-secondary" onclick="chessResign()">Resign</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIN OVERLAY -->
+<div id="win-overlay" class="win-overlay" style="display:none">
+  <div class="win-box">
+    <h2 id="win-title">Winner!</h2>
+    <p id="win-msg"></p>
+    <div class="btn-row">
+      <button class="btn-primary" onclick="hideWin(); backToMenu()">Main Menu</button>
+      <button class="btn-green" onclick="hideWin(); restartCurrent()">Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  GLOBAL
+// ============================================================
+let currentGame = null;
+let setupConfig = {};
+
+const COLORS = {
+  red: '#e74c3c', green: '#2ecc71', yellow: '#f1c40f', blue: '#3498db'
+};
+const COLOR_NAMES = ['red', 'green', 'yellow', 'blue'];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function backToMenu() {
+  currentGame = null;
+  showScreen('menu');
+}
+function hideWin() {
+  document.getElementById('win-overlay').style.display = 'none';
+}
+function showWin(title, msg) {
+  document.getElementById('win-title').textContent = title;
+  document.getElementById('win-msg').textContent = msg;
+  document.getElementById('win-overlay').style.display = 'flex';
+}
+function restartCurrent() {
+  if (currentGame === 'ludo') startLudo(setupConfig);
+  else if (currentGame === 'snl') startSNL(setupConfig);
+  else if (currentGame === 'chess') startChess(setupConfig);
+}
+
+// ============================================================
+//  SETUP
+// ============================================================
+function openSetup(game) {
+  currentGame = game;
+  const titles = { ludo: '🎯 Ludo Setup', snl: '🐍 Snakes & Ladders Setup', chess: '♟️ Chess Setup' };
+  document.getElementById('setup-title').textContent = titles[game];
+  const box = document.getElementById('setup-content');
+
+  if (game === 'ludo') {
+    box.innerHTML = `
+      <p style="margin-bottom:16px;color:#aaa">Choose 2–4 players. AI or Human.</p>
+      ${[0,1,2,3].map(i => `
+        <div class="player-row">
+          <span class="color-dot" style="background:${COLORS[COLOR_NAMES[i]]}"></span>
+          <label>${COLOR_NAMES[i].charAt(0).toUpperCase()+COLOR_NAMES[i].slice(1)}</label>
+          <select id="ludo-type-${i}">
+            <option value="human">Human</option>
+            <option value="ai" ${i>0?'selected':''}>AI</option>
+            <option value="off" ${i>1?'selected':''}>Off</option>
+          </select>
+          <input type="text" id="ludo-name-${i}" value="Player ${i+1}" maxlength="12" style="width:110px">
+        </div>
+      `).join('')}
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="backToMenu()">Cancel</button>
+        <button class="btn-primary" onclick="confirmLudo()">Start Game</button>
+      </div>
+    `;
+  } else if (game === 'snl') {
+    box.innerHTML = `
+      <p style="margin-bottom:16px;color:#aaa">2–4 players. Race to square 100!</p>
+      ${[0,1,2,3].map(i => `
+        <div class="player-row">
+          <span class="color-dot" style="background:${['#e74c3c','#3498db','#2ecc71','#f1c40f'][i]}"></span>
+          <label>P${i+1}</label>
+          <select id="snl-type-${i}">
+            <option value="human">Human</option>
+            <option value="ai" ${i>0?'selected':''}>AI</option>
+            <option value="off" ${i>1?'selected':''}>Off</option>
+          </select>
+          <input type="text" id="snl-name-${i}" value="Player ${i+1}" maxlength="12" style="width:110px">
+        </div>
+      `).join('')}
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="backToMenu()">Cancel</button>
+        <button class="btn-primary" onclick="confirmSNL()">Start Game</button>
+      </div>
+    `;
+  } else {
+    box.innerHTML = `
+      <p style="margin-bottom:16px;color:#aaa">Play as White or Black vs AI / Friend.</p>
+      <div class="player-row">
+        <label>White</label>
+        <select id="chess-white">
+          <option value="human">Human</option>
+          <option value="ai">AI</option>
+        </select>
+        <input type="text" id="chess-white-name" value="White" maxlength="12" style="width:100px">
+      </div>
+      <div class="player-row">
+        <label>Black</label>
+        <select id="chess-black">
+          <option value="ai" selected>AI</option>
+          <option value="human">Human</option>
+        </select>
+        <input type="text" id="chess-black-name" value="Black" maxlength="12" style="width:100px">
+      </div>
+      <div class="player-row">
+        <label>AI Strength</label>
+        <select id="chess-depth">
+          <option value="1">Easy</option>
+          <option value="2" selected>Medium</option>
+          <option value="3">Hard</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn-secondary" onclick="backToMenu()">Cancel</button>
+        <button class="btn-primary" onclick="confirmChess()">Start Game</button>
+      </div>
+    `;
+  }
+  showScreen('setup');
+}
+
+function confirmLudo() {
+  const players = [];
+  for (let i = 0; i < 4; i++) {
+    const type = document.getElementById(`ludo-type-${i}`).value;
+    if (type === 'off') continue;
+    players.push({
+      color: COLOR_NAMES[i],
+      name: document.getElementById(`ludo-name-${i}`).value || `Player ${i+1}`,
+      isAI: type === 'ai'
+    });
+  }
+  if (players.length < 2) { alert('Need at least 2 players!'); return; }
+  setupConfig = { players };
+  startLudo(setupConfig);
+}
+
+function confirmSNL() {
+  const players = [];
+  for (let i = 0; i < 4; i++) {
+    const type = document.getElementById(`snl-type-${i}`).value;
+    if (type === 'off') continue;
+    players.push({
+      id: i,
+      name: document.getElementById(`snl-name-${i}`).value || `Player ${i+1}`,
+      isAI: type === 'ai',
+      pos: 0
+    });
+  }
+  if (players.length < 2) { alert('Need at least 2 players!'); return; }
+  setupConfig = { players };
+  startSNL(setupConfig);
+}
+
+function confirmChess() {
+  setupConfig = {
+    white: {
+      name: document.getElementById('chess-white-name').value || 'White',
+      isAI: document.getElementById('chess-white').value === 'ai'
+    },
+    black: {
+      name: document.getElementById('chess-black-name').value || 'Black',
+      isAI: document.getElementById('chess-black').value === 'ai'
+    },
+    depth: parseInt(document.getElementById('chess-depth').value)
+  };
+  startChess(setupConfig);
+}
+
+// ============================================================
+//  LUDO
+// ============================================================
+/*
+  Board layout: 15x15 grid
+  Path is the outer ring + home columns.
+  Each color has 4 tokens starting in home yard.
+  Path indices 0-51 for the main track.
+*/
+const LUDO_PATH = [
+  // Red start (bottom) going clockwise
+  [13,6],[12,6],[11,6],[10,6],[9,6],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0],
+  [7,0],[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[5,6],[4,6],[3,6],[2,6],[1,6],[0,6],
+  [0,7],[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[6,9],[6,10],[6,11],[6,12],[6,13],[6,14],
+  [7,14],[8,14],[8,13],[8,12],[8,11],[8,10],[8,9],[9,8],[10,8],[11,8],[12,8],[13,8],[14,8],
+  [14,7],[14,6]
+]; // 52 cells
+
+// Starting path index for each color
+const LUDO_START = { red: 0, green: 13, yellow: 26, blue: 39 };
+// Home column entry (when token reaches near start after full lap)
+const LUDO_HOME_ENTRY = { red: 50, green: 11, yellow: 24, blue: 37 };
+// Safe squares (star positions)
+const LUDO_SAFE = [0, 8, 13, 21, 26, 34, 39, 47];
+
+// Home columns (final 6 squares for each color)
+const LUDO_HOME_COL = {
+  red: [[13,7],[12,7],[11,7],[10,7],[9,7],[8,7]],
+  green: [[7,1],[7,2],[7,3],[7,4],[7,5],[7,6]],
+  yellow: [[1,7],[2,7],[3,7],[4,7],[5,7],[6,7]],
+  blue: [[7,13],[7,12],[7,11],[7,10],[7,9],[7,8]]
+};
+
+let ludo = {};
+
+function startLudo(cfg) {
+  currentGame = 'ludo';
+  ludo = {
+    players: cfg.players.map(p => ({
+      ...p,
+      tokens: [0,0,0,0], // 0 = in yard, 1-52 = path, 53-58 = home column, 59 = finished
+      finished: 0
+    })),
+    turn: 0,
+    dice: 0,
+    canRoll: true,
+    selectedToken: -1,
+    mustMove: false,
+    consecutiveSixes: 0
+  };
+  buildLudoBoard();
+  updateLudoUI();
+  showScreen('ludo');
+  if (ludo.players[0].isAI) setTimeout(ludoAITurn, 800);
+}
+
+function buildLudoBoard() {
+  const board = document.getElementById('ludo-board');
+  board.innerHTML = '';
+  // Create 15x15 grid
+  for (let r = 0; r < 15; r++) {
+    for (let c = 0; c < 15; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'ludo-cell';
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+
+      // Yards
+      if (r < 6 && c < 6) cell.classList.add('ludo-red');
+      else if (r < 6 && c > 8) cell.classList.add('ludo-green');
+      else if (r > 8 && c < 6) cell.classList.add('ludo-yellow');
+      else if (r > 8 && c > 8) cell.classList.add('ludo-blue');
+      // Center
+      else if (r >= 6 && r <= 8 && c >= 6 && c <= 8) {
+        if (r === 7 && c === 7) cell.classList.add('ludo-center');
+        else cell.classList.add('ludo-home');
+      }
+      // Paths
+      else {
+        cell.classList.add('ludo-path');
+        // Color the home columns
+        if (c === 7 && r >= 9 && r <= 13) cell.classList.add('ludo-red');
+        if (r === 7 && c >= 1 && c <= 5) cell.classList.add('ludo-green');
+        if (c === 7 && r >= 1 && r <= 5) cell.classList.add('ludo-yellow');
+        if (r === 7 && c >= 9 && c <= 13) cell.classList.add('ludo-blue');
+      }
+      board.appendChild(cell);
+    }
+  }
+  // Mark safe spots
+  LUDO_SAFE.forEach(idx => {
+    const [r,c] = LUDO_PATH[idx];
+    const cell = board.querySelector(`[data-r="${r}"][data-c="${c}"]`);
+    if (cell) cell.classList.add('ludo-safe');
+  });
+  renderLudoTokens();
+}
+
+function getTokenPos(color, tokenState) {
+  if (tokenState === 0) {
+    // Yard positions
+    const yards = {
+      red: [[1,1],[1,4],[4,1],[4,4]],
+      green: [[1,10],[1,13],[4,10],[4,13]],
+      yellow: [[10,1],[10,4],[13,1],[13,4]],
+      blue: [[10,10],[10,13],[13,10],[13,13]]
+    };
+    // We need which token index — handled in render
+    return null;
+  }
+  if (tokenState >= 53 && tokenState <= 58) {
+    const homeIdx = tokenState - 53;
+    return LUDO_HOME_COL[color][homeIdx];
+  }
+  if (tokenState === 59) return [7,7]; // finished in center
+  // On path: convert relative to absolute path index
+  const start = LUDO_START[color];
+  const absIdx = (start + tokenState - 1) % 52;
+  return LUDO_PATH[absIdx];
+}
+
+function renderLudoTokens() {
+  // Clear existing tokens
+  document.querySelectorAll('.token').forEach(t => t.remove());
+  const board = document.getElementById('ludo-board');
+
+  ludo.players.forEach((p, pi) => {
+    p.tokens.forEach((state, ti) => {
+      const token = document.createElement('div');
+      token.className = `token ${p.color}`;
+      token.dataset.pi = pi;
+      token.dataset.ti = ti;
+      if (ludo.selectedToken === ti && ludo.turn === pi) token.classList.add('selected');
+
+      let pos;
+      if (state === 0) {
+        const yards = {
+          red: [[1.5,1.5],[1.5,3.5],[3.5,1.5],[3.5,3.5]],
+          green: [[1.5,10.5],[1.5,12.5],[3.5,10.5],[3.5,12.5]],
+          yellow: [[10.5,1.5],[10.5,3.5],[12.5,1.5],[12.5,3.5]],
+          blue: [[10.5,10.5],[10.5,12.5],[12.5,10.5],[12.5,12.5]]
+        };
+        pos = yards[p.color][ti];
+      } else if (state >= 53 && state <= 58) {
+        pos = LUDO_HOME_COL[p.color][state - 53];
+      } else if (state === 59) {
+        // Stack finished tokens slightly offset
+        pos = [7 + (ti%2)*0.3 - 0.15, 7 + Math.floor(ti/2)*0.3 - 0.15];
+      } else {
+        const start = LUDO_START[p.color];
+        const absIdx = (start + state - 1) % 52;
+        pos = LUDO_PATH[absIdx];
+      }
+
+      const cell = board.querySelector(`[data-r="${Math.floor(pos[0])}"][data-c="${Math.floor(pos[1])}"]`);
+      if (cell) {
+        // Offset multiple tokens on same cell
+        const siblings = Array.from(cell.querySelectorAll('.token')).length;
+        token.style.left = `${2 + (siblings % 2) * 6}px`;
+        token.style.top = `${2 + Math.floor(siblings / 2) * 6}px`;
+        cell.appendChild(token);
+      }
+
+      token.onclick = () => ludoSelectToken(pi, ti);
+    });
+  });
+}
+
+function updateLudoUI() {
+  const p = ludo.players[ludo.turn];
+  document.getElementById('ludo-turn').textContent = `${p.name}'s turn`;
+  document.getElementById('ludo-turn').style.background = COLORS[p.color];
+  document.getElementById('ludo-turn').style.color = '#111';
+
+  const list = document.getElementById('ludo-players');
+  list.innerHTML = ludo.players.map((pl, i) => `
+    <div class="player-badge ${i===ludo.turn?'active':''}" style="background:${COLORS[pl.color]};color:#111">
+      ${pl.name} ${pl.isAI?'🤖':''} (${pl.finished}/4)
+    </div>
+  `).join('');
+
+  document.getElementById('ludo-dice').textContent = ludo.dice || '?';
+  document.getElementById('ludo-roll-btn').disabled = !ludo.canRoll || p.isAI;
+}
+
+function ludoRoll() {
+  if (!ludo.canRoll) return;
+  const p = ludo.players[ludo.turn];
+  if (p.isAI) return;
+
+  ludo.canRoll = false;
+  const diceEl = document.getElementById('ludo-dice');
+  diceEl.classList.add('rolling');
+
+  setTimeout(() => {
+    diceEl.classList.remove('rolling');
+    ludo.dice = Math.floor(Math.random() * 6) + 1;
+    diceEl.textContent = ludo.dice;
+    document.getElementById('ludo-status').textContent = `${p.name} rolled ${ludo.dice}`;
+
+    if (ludo.dice === 6) ludo.consecutiveSixes++;
+    else ludo.consecutiveSixes = 0;
+
+    if (ludo.consecutiveSixes >= 3) {
+      document.getElementById('ludo-status').textContent = 'Three 6s! Turn skipped.';
+      setTimeout(ludoNextTurn, 1000);
+      return;
+    }
+
+    const moves = ludoGetValidMoves(p);
+    if (moves.length === 0) {
+      document.getElementById('ludo-status').textContent = 'No valid moves. Next turn.';
+      setTimeout(ludoNextTurn, 900);
+      return;
+    }
+
+    ludo.mustMove = true;
+    if (moves.length === 1) {
+      // Auto move single option
+      setTimeout(() => ludoMoveToken(ludo.turn, moves[0]), 400);
+    } else {
+      document.getElementById('ludo-status').textContent = `Select a token to move (${ludo.dice})`;
+      // Highlight selectable
+      moves.forEach(ti => {
+        const t = document.querySelector(`.token[data-pi="${ludo.turn}"][data-ti="${ti}"]`);
+        if (t) t.classList.add('selected');
+      });
+    }
+  }, 500);
+}
+
+function ludoGetValidMoves(p) {
+  const moves = [];
+  p.tokens.forEach((state, ti) => {
+    if (state === 59) return; // finished
+    if (state === 0) {
+      if (ludo.dice === 6) moves.push(ti);
+    } else if (state >= 53 && state <= 58) {
+      const homePos = state - 52; // 1-6
+      if (homePos + ludo.dice <= 6) moves.push(ti);
+    } else {
+      // On path
+      const newState = state + ludo.dice;
+      if (newState <= 51) moves.push(ti);
+      else if (newState <= 57) {
+        // Enter home column
+        moves.push(ti);
+      }
+      // else overshoot, invalid
+    }
+  });
+  return moves;
+}
+
+function ludoSelectToken(pi, ti) {
+  if (pi !== ludo.turn || !ludo.mustMove) return;
+  const p = ludo.players[pi];
+  if (p.isAI) return;
+  const moves = ludoGetValidMoves(p);
+  if (!moves.includes(ti)) return;
+  ludoMoveToken(pi, ti);
+}
+
+function ludoMoveToken(pi, ti) {
+  const p = ludo.players[pi];
+  let state = p.tokens[ti];
+  const dice = ludo.dice;
+
+  if (state === 0) {
+    state = 1; // enter board
+  } else if (state >= 53) {
+    state += dice;
+    if (state === 59) {
+      p.finished++;
+      document.getElementById('ludo-status').textContent = `${p.name} got a token home! 🎉`;
+    }
+  } else {
+    state += dice;
+    if (state > 51) {
+      // Enter home
+      const over = state - 51;
+      state = 52 + over;
+      if (state === 59) {
+        p.finished++;
+        document.getElementById('ludo-status').textContent = `${p.name} got a token home! 🎉`;
+      }
+    }
+  }
+  p.tokens[ti] = state;
+
+  // Capture check
+  if (state >= 1 && state <= 51) {
+    const start = LUDO_START[p.color];
+    const absIdx = (start + state - 1) % 52;
+    if (!LUDO_SAFE.includes(absIdx)) {
+      ludo.players.forEach((op, oi) => {
+        if (oi === pi) return;
+        op.tokens.forEach((os, oti) => {
+          if (os >= 1 && os <= 51) {
+            const oStart = LUDO_START[op.color];
+            const oAbs = (oStart + os - 1) % 52;
+            if (oAbs === absIdx) {
+              op.tokens[oti] = 0; // send home
+              document.getElementById('ludo-status').textContent = `${p.name} captured ${op.name}'s token!`;
+            }
+          }
+        });
+      });
+    }
+  }
+
+  ludo.mustMove = false;
+  ludo.selectedToken = -1;
+  renderLudoTokens();
+  updateLudoUI();
+
+  // Win check
+  if (p.finished === 4) {
+    showWin(`${p.name} Wins!`, 'All 4 tokens home!');
+    return;
+  }
+
+  // Extra turn on 6
+  if (dice === 6) {
+    ludo.canRoll = true;
+    document.getElementById('ludo-status').textContent = 'Rolled 6! Roll again.';
+    updateLudoUI();
+    if (p.isAI) setTimeout(ludoAITurn, 700);
+  } else {
+    setTimeout(ludoNextTurn, 600);
+  }
+}
+
+function ludoNextTurn() {
+  ludo.turn = (ludo.turn + 1) % ludo.players.length;
+  ludo.dice = 0;
+  ludo.canRoll = true;
+  ludo.mustMove = false;
+  ludo.consecutiveSixes = 0;
+  updateLudoUI();
+  document.getElementById('ludo-status').textContent = `${ludo.players[ludo.turn].name}'s turn — Roll!`;
+  document.getElementById('ludo-dice').textContent = '?';
+  if (ludo.players[ludo.turn].isAI) setTimeout(ludoAITurn, 800);
+}
+
+function ludoAITurn() {
+  if (!ludo.canRoll) return;
+  const p = ludo.players[ludo.turn];
+  if (!p.isAI) return;
+
+  // Roll
+  ludo.canRoll = false;
+  const diceEl = document.getElementById('ludo-dice');
+  diceEl.classList.add('rolling');
+  setTimeout(() => {
+    diceEl.classList.remove('rolling');
+    ludo.dice = Math.floor(Math.random() * 6) + 1;
+    diceEl.textContent = ludo.dice;
+    document.getElementById('ludo-status').textContent = `${p.name} (AI) rolled ${ludo.dice}`;
+
+    if (ludo.dice === 6) ludo.consecutiveSixes++;
+    else ludo.consecutiveSixes = 0;
+    if (ludo.consecutiveSixes >= 3) {
+      setTimeout(ludoNextTurn, 900);
+      return;
+    }
+
+    const moves = ludoGetValidMoves(p);
+    if (moves.length === 0) {
+      setTimeout(ludoNextTurn, 900);
+      return;
+    }
+
+    // Simple AI: prefer capture > finish > enter board > advance furthest
+    let best = moves[0];
+    let bestScore = -999;
+    moves.forEach(ti => {
+      let score = p.tokens[ti];
+      // Prefer tokens already out
+      if (p.tokens[ti] === 0) score = 5;
+      if (p.tokens[ti] >= 53) score = 100; // home column priority
+      // Check capture
+      if (p.tokens[ti] > 0 && p.tokens[ti] < 52) {
+        const newState = p.tokens[ti] + ludo.dice;
+        if (newState <= 51) {
+          const start = LUDO_START[p.color];
+          const abs = (start + newState - 1) % 52;
+          ludo.players.forEach((op, oi) => {
+            if (oi === ludo.turn) return;
+            op.tokens.forEach(os => {
+              if (os >= 1 && os <= 51) {
+                const oAbs = (LUDO_START[op.color] + os - 1) % 52;
+                if (oAbs === abs && !LUDO_SAFE.includes(abs)) score = 200;
+              }
+            });
+          });
+        }
+      }
+      if (score > bestScore) { bestScore = score; best = ti; }
+    });
+
+    setTimeout(() => ludoMoveToken(ludo.turn, best), 500);
+  }, 500);
+}
+
+// ============================================================
+//  SNAKES & LADDERS
+// ============================================================
+const SNAKES = {
+  16: 6, 47: 26, 49: 11, 56: 53, 62: 19, 64: 60, 87: 24, 93: 73, 95: 75, 98: 78
+};
+const LADDERS = {
+  1: 38, 4: 14, 9: 31, 21: 42, 28: 84, 36: 44, 51: 67, 71: 91, 80: 100
+};
+
+let snl = {};
+
+function startSNL(cfg) {
+  currentGame = 'snl';
+  snl = {
+    players: cfg.players.map(p => ({ ...p, pos: 0 })),
+    turn: 0,
+    dice: 0,
+    canRoll: true
+  };
+  buildSNLBoard();
+  updateSNLUI();
+  showScreen('snl');
+  if (snl.players[0].isAI) setTimeout(snlAITurn, 700);
+}
+
+function buildSNLBoard() {
+  const board = document.getElementById('snl-board');
+  board.innerHTML = '';
+  // Standard board: 100 at top-left, zigzag
+  for (let row = 9; row >= 0; row--) {
+    const leftToRight = row % 2 === 0;
+    for (let col = 0; col < 10; col++) {
+      const c = leftToRight ? col : 9 - col;
+      const num = row * 10 + c + 1;
+      const cell = document.createElement('div');
+      cell.className = 'snl-cell';
+      if (num % 2 === 0) cell.classList.add('even');
+      cell.dataset.num = num;
+      let label = num;
+      if (SNAKES[num]) { cell.classList.add('snake-start'); label = `${num}↓${SNAKES[num]}`; }
+      if (LADDERS[num]) { cell.classList.add('ladder-start'); label = `${num}↑${LADDERS[num]}`; }
+      cell.textContent = label;
+      board.appendChild(cell);
+    }
+  }
+  renderSNLTokens();
+}
+
+function renderSNLTokens() {
+  document.querySelectorAll('.snl-token').forEach(t => t.remove());
+  snl.players.forEach((p, i) => {
+    if (p.pos === 0) return;
+    const cell = document.querySelector(`.snl-cell[data-num="${p.pos}"]`);
+    if (!cell) return;
+    const token = document.createElement('div');
+    token.className = `snl-token p${i+1}`;
+    cell.appendChild(token);
+  });
+}
+
+function updateSNLUI() {
+  const p = snl.players[snl.turn];
+  document.getElementById('snl-turn').textContent = `${p.name}'s turn`;
+  const colors = ['#e74c3c','#3498db','#2ecc71','#f1c40f'];
+  document.getElementById('snl-turn').style.background = colors[p.id];
+  document.getElementById('snl-turn').style.color = '#111';
+
+  document.getElementById('snl-players').innerHTML = snl.players.map((pl, i) => `
+    <div class="player-badge ${i===snl.turn?'active':''}" style="background:${colors[pl.id]};color:#111">
+      ${pl.name} ${pl.isAI?'🤖':''} — ${pl.pos}
+    </div>
+  `).join('');
+
+  document.getElementById('snl-dice').textContent = snl.dice || '?';
+  document.getElementById('snl-roll-btn').disabled = !snl.canRoll || p.isAI;
+}
+
+function snlRoll() {
+  if (!snl.canRoll) return;
+  const p = snl.players[snl.turn];
+  if (p.isAI) return;
+  snlDoRoll();
+}
+
+function snlDoRoll() {
+  snl.canRoll = false;
+  const diceEl = document.getElementById('snl-dice');
+  diceEl.classList.add('rolling');
+  setTimeout(() => {
+    diceEl.classList.remove('rolling');
+    snl.dice = Math.floor(Math.random() * 6) + 1;
+    diceEl.textContent = snl.dice;
+    const p = snl.players[snl.turn];
+    let newPos = p.pos + snl.dice;
+    if (newPos > 100) {
+      document.getElementById('snl-status').textContent = `${p.name} needs exact roll! Stays at ${p.pos}`;
+      setTimeout(snlNextTurn, 900);
+      return;
+    }
+    p.pos = newPos;
+    let msg = `${p.name} → ${p.pos}`;
+    if (SNAKES[p.pos]) {
+      p.pos = SNAKES[p.pos];
+      msg += ` 🐍 Snake to ${p.pos}!`;
+    } else if (LADDERS[p.pos]) {
+      p.pos = LADDERS[p.pos];
+      msg += ` 🪜 Ladder to ${p.pos}!`;
+    }
+    document.getElementById('snl-status').textContent = msg;
+    renderSNLTokens();
+    updateSNLUI();
+
+    if (p.pos === 100) {
+      showWin(`${p.name} Wins!`, 'Reached square 100!');
+      return;
+    }
+    // Extra turn on 6
+    if (snl.dice === 6) {
+      snl.canRoll = true;
+      document.getElementById('snl-status').textContent += ' (Roll again!)';
+      updateSNLUI();
+      if (p.isAI) setTimeout(snlAITurn, 700);
+    } else {
+      setTimeout(snlNextTurn, 800);
+    }
+  }, 450);
+}
+
+function snlNextTurn() {
+  snl.turn = (snl.turn + 1) % snl.players.length;
+  snl.dice = 0;
+  snl.canRoll = true;
+  updateSNLUI();
+  document.getElementById('snl-status').textContent = `${snl.players[snl.turn].name}'s turn`;
+  document.getElementById('snl-dice').textContent = '?';
+  if (snl.players[snl.turn].isAI) setTimeout(snlAITurn, 700);
+}
+
+function snlAITurn() {
+  if (!snl.canRoll) return;
+  if (!snl.players[snl.turn].isAI) return;
+  snlDoRoll();
+}
+
+// ============================================================
+//  CHESS
+// ============================================================
+const PIECES = {
+  K: '♔', Q: '♕', R: '♖', B: '♗', N: '♘', P: '♙',
+  k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟'
+};
+
+let chess = {};
+
+function startChess(cfg) {
+  currentGame = 'chess';
+  chess = {
+    board: createInitialBoard(),
+    turn: 'w',
+    white: cfg.white,
+    black: cfg.black,
+    depth: cfg.depth || 2,
+    selected: null,
+    possible: [],
+    lastMove: null,
+    history: [],
+    gameOver: false,
+    inCheck: false
+  };
+  buildChessBoard();
+  updateChessUI();
+  showScreen('chess');
+  if (chess.white.isAI && chess.turn === 'w') setTimeout(chessAIMove, 600);
+}
+
+function createInitialBoard() {
+  return [
+    ['r','n','b','q','k','b','n','r'],
+    ['p','p','p','p','p','p','p','p'],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null],
+    ['P','P','P','P','P','P','P','P'],
+    ['R','N','B','Q','K','B','N','R']
+  ];
+}
+
+function buildChessBoard() {
+  const board = document.getElementById('chess-board');
+  board.innerHTML = '';
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const sq = document.createElement('div');
+      sq.className = `chess-sq ${(r+c)%2===0?'light':'dark'}`;
+      sq.dataset.r = r;
+      sq.dataset.c = c;
+      sq.onclick = () => chessClick(r, c);
+      board.appendChild(sq);
+    }
+  }
+  renderChess();
+}
+
+function renderChess() {
+  const squares = document.querySelectorAll('.chess-sq');
+  squares.forEach(sq => {
+    const r = +sq.dataset.r, c = +sq.dataset.c;
+    sq.innerHTML = '';
+    sq.classList.remove('selected', 'possible', 'last-move', 'check');
+    const piece = chess.board[r][c];
+    if (piece) {
+      const span = document.createElement('span');
+      span.className = 'chess-piece';
+      span.textContent = PIECES[piece];
+      sq.appendChild(span);
+    }
+    if (chess.selected && chess.selected[0] === r && chess.selected[1] === c) {
+      sq.classList.add('selected');
+    }
+    if (chess.possible.some(([pr,pc]) => pr===r && pc===c)) {
+      sq.classList.add('possible');
+    }
+    if (chess.lastMove) {
+      if ((chess.lastMove.from[0]===r && chess.lastMove.from[1]===c) ||
+          (chess.lastMove.to[0]===r && chess.lastMove.to[1]===c)) {
+        sq.classList.add('last-move');
+      }
+    }
+  });
+  // Highlight king in check
+  if (chess.inCheck) {
+    const king = chess.turn === 'w' ? 'K' : 'k';
+    for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+      if (chess.board[r][c] === king) {
+        document.querySelector(`.chess-sq[data-r="${r}"][data-c="${c}"]`)?.classList.add('check');
+      }
+    }
+  }
+}
+
+function updateChessUI() {
+  const side = chess.turn === 'w' ? chess.white : chess.black;
+  document.getElementById('chess-turn').textContent = `${side.name}'s turn (${chess.turn==='w'?'White':'Black'})`;
+  document.getElementById('chess-players').innerHTML = `
+    <div class="player-badge ${chess.turn==='w'?'active':''}" style="background:#f0d9b5;color:#111">
+      ♔ ${chess.white.name} ${chess.white.isAI?'🤖':''}
+    </div>
+    <div class="player-badge ${chess.turn==='b'?'active':''}" style="background:#b58863;color:#fff">
+      ♚ ${chess.black.name} ${chess.black.isAI?'🤖':''}
+    </div>
+  `;
+  document.getElementById('chess-status').textContent = chess.inCheck ? 'CHECK!' : (chess.gameOver ? 'Game Over' : 'Select a piece');
+}
+
+function isWhite(piece) { return piece && piece === piece.toUpperCase(); }
+function isBlack(piece) { return piece && piece === piece.toLowerCase(); }
+function opponent(color) { return color === 'w' ? 'b' : 'w'; }
+
+function chessClick(r, c) {
+  if (chess.gameOver) return;
+  const side = chess.turn === 'w' ? chess.white : chess.black;
+  if (side.isAI) return;
+
+  const piece = chess.board[r][c];
+  if (chess.selected) {
+    // Try move
+    if (chess.possible.some(([pr,pc]) => pr===r && pc===c)) {
+      chessDoMove(chess.selected[0], chess.selected[1], r, c);
+      return;
+    }
+    // Reselect
+    chess.selected = null;
+    chess.possible = [];
+  }
+  if (piece && ((chess.turn==='w' && isWhite(piece)) || (chess.turn==='b' && isBlack(piece)))) {
+    chess.selected = [r, c];
+    chess.possible = getLegalMoves(r, c);
+  }
+  renderChess();
+}
+
+function getPseudoMoves(r, c, board = chess.board) {
+  const piece = board[r][c];
+  if (!piece) return [];
+  const moves = [];
+  const white = isWhite(piece);
+  const type = piece.toUpperCase();
+  const dirs = {
+    R: [[0,1],[0,-1],[1,0],[-1,0]],
+    B: [[1,1],[1,-1],[-1,1],[-1,-1]],
+    Q: [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+    K: [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+    N: [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]
+  };
+
+  const add = (nr, nc) => {
+    if (nr<0||nr>7||nc<0||nc>7) return false;
+    const t = board[nr][nc];
+    if (!t) { moves.push([nr,nc]); return true; }
+    if (white ? isBlack(t) : isWhite(t)) moves.push([nr,nc]);
+    return false;
+  };
+
+  if (type === 'P') {
+    const dir = white ? -1 : 1;
+    const start = white ? 6 : 1;
+    if (!board[r+dir]?.[c]) {
+      moves.push([r+dir, c]);
+      if (r === start && !board[r+2*dir]?.[c]) moves.push([r+2*dir, c]);
+    }
+    // Captures
+    [[r+dir, c-1],[r+dir, c+1]].forEach(([nr,nc]) => {
+      if (nr>=0&&nr<8&&nc>=0&&nc<8) {
+        const t = board[nr][nc];
+        if (t && (white ? isBlack(t) : isWhite(t))) moves.push([nr,nc]);
+      }
+    });
+  } else if (type === 'N' || type === 'K') {
+    dirs[type].forEach(([dr,dc]) => add(r+dr, c+dc));
+  } else {
+    dirs[type].forEach(([dr,dc]) => {
+      for (let i=1;i<8;i++) {
+        if (!add(r+dr*i, c+dc*i)) break;
+      }
+    });
+  }
+  return moves;
+}
+
+function isSquareAttacked(r, c, byWhite, board = chess.board) {
+  for (let i=0;i<8;i++) for (let j=0;j<8;j++) {
+    const p = board[i][j];
+    if (!p) continue;
+    if (byWhite && !isWhite(p)) continue;
+    if (!byWhite && !isBlack(p)) continue;
+    const moves = getPseudoMoves(i, j, board);
+    if (moves.some(([mr,mc]) => mr===r && mc===c)) return true;
+  }
+  return false;
+}
+
+function findKing(color, board = chess.board) {
+  const k = color === 'w' ? 'K' : 'k';
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) if (board[r][c]===k) return [r,c];
+  return null;
+}
+
+function isInCheck(color, board = chess.board) {
+  const king = findKing(color, board);
+  if (!king) return true;
+  return isSquareAttacked(king[0], king[1], color === 'b', board);
+}
+
+function getLegalMoves(r, c) {
+  const piece = chess.board[r][c];
+  if (!piece) return [];
+  const color = isWhite(piece) ? 'w' : 'b';
+  return getPseudoMoves(r, c).filter(([nr,nc]) => {
+    const nb = chess.board.map(row => [...row]);
+    nb[nr][nc] = nb[r][c];
+    nb[r][c] = null;
+    // Pawn promotion temporary
+    if (nb[nr][nc] === 'P' && nr === 0) nb[nr][nc] = 'Q';
+    if (nb[nr][nc] === 'p' && nr === 7) nb[nr][nc] = 'q';
+    return !isInCheck(color, nb);
+  });
+}
+
+function getAllLegalMoves(color) {
+  const moves = [];
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+    const p = chess.board[r][c];
+    if (!p) continue;
+    if ((color==='w' && isWhite(p)) || (color==='b' && isBlack(p))) {
+      getLegalMoves(r,c).forEach(([nr,nc]) => moves.push({from:[r,c], to:[nr,nc]}));
+    }
+  }
+  return moves;
+}
+
+function chessDoMove(fr, fc, tr, tc) {
+  chess.history.push({
+    board: chess.board.map(r => [...r]),
+    turn: chess.turn,
+    lastMove: chess.lastMove
+  });
+  const piece = chess.board[fr][fc];
+  chess.board[tr][tc] = piece;
+  chess.board[fr][fc] = null;
+
+  // Promotion
+  if (piece === 'P' && tr === 0) chess.board[tr][tc] = 'Q';
+  if (piece === 'p' && tr === 7) chess.board[tr][tc] = 'q';
+
+  chess.lastMove = { from: [fr,fc], to: [tr,tc] };
+  chess.selected = null;
+  chess.possible = [];
+  chess.turn = opponent(chess.turn);
+  chess.inCheck = isInCheck(chess.turn);
+
+  // Checkmate / Stalemate
+  const legal = getAllLegalMoves(chess.turn);
+  if (legal.length === 0) {
+    chess.gameOver = true;
+    if (chess.inCheck) {
+      const winner = chess.turn === 'w' ? chess.black : chess.white;
+      showWin(`${winner.name} Wins!`, 'Checkmate!');
+    } else {
+      showWin('Draw!', 'Stalemate');
+    }
+  }
+
+  renderChess();
+  updateChessUI();
+
+  if (!chess.gameOver) {
+    const next = chess.turn === 'w' ? chess.white : chess.black;
+    if (next.isAI) setTimeout(chessAIMove, 500);
+  }
+}
+
+function chessUndo() {
+  if (chess.history.length === 0 || chess.gameOver) return;
+  // Undo AI move too if needed
+  const last = chess.history.pop();
+  chess.board = last.board;
+  chess.turn = last.turn;
+  chess.lastMove = last.lastMove;
+  chess.selected = null;
+  chess.possible = [];
+  chess.inCheck = isInCheck(chess.turn);
+  chess.gameOver = false;
+  renderChess();
+  updateChessUI();
+}
+
+function chessResign() {
+  if (chess.gameOver) return;
+  const winner = chess.turn === 'w' ? chess.black : chess.white;
+  chess.gameOver = true;
+  showWin(`${winner.name} Wins!`, 'Opponent resigned');
+}
+
+// Simple minimax AI
+function evaluateBoard(board) {
+  const values = { p:1, n:3, b:3, r:5, q:9, k:0, P:-1, N:-3, B:-3, R:-5, Q:-9, K:0 };
+  let score = 0;
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+    const p = board[r][c];
+    if (p) score += values[p] || 0;
+  }
+  return score; // positive = black advantage (since AI often plays black)
+}
+
+function minimax(board, depth, alpha, beta, maximizing, color) {
+  if (depth === 0) return { score: evaluateBoard(board) };
+
+  // Generate moves for current color
+  const moves = [];
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+    const p = board[r][c];
+    if (!p) continue;
+    if ((color==='w' && isWhite(p)) || (color==='b' && isBlack(p))) {
+      getPseudoMoves(r,c,board).forEach(([nr,nc]) => {
+        const nb = board.map(row => [...row]);
+        nb[nr][nc] = nb[r][c];
+        nb[r][c] = null;
+        if (nb[nr][nc]==='P'&&nr===0) nb[nr][nc]='Q';
+        if (nb[nr][nc]==='p'&&nr===7) nb[nr][nc]='q';
+        if (!isInCheck(color, nb)) moves.push({from:[r,c],to:[nr,nc],board:nb});
+      });
+    }
+  }
+
+  if (moves.length === 0) {
+    if (isInCheck(color, board)) return { score: maximizing ? -10000 : 10000 };
+    return { score: 0 };
+  }
+
+  let bestMove = moves[0];
+  if (maximizing) {
+    let maxEval = -Infinity;
+    for (const m of moves) {
+      const result = minimax(m.board, depth-1, alpha, beta, false, opponent(color));
+      if (result.score > maxEval) { maxEval = result.score; bestMove = m; }
+      alpha = Math.max(alpha, maxEval);
+      if (beta <= alpha) break;
+    }
+    return { score: maxEval, move: bestMove };
+  } else {
+    let minEval = Infinity;
+    for (const m of moves) {
+      const result = minimax(m.board, depth-1, alpha, beta, true, opponent(color));
+      if (result.score < minEval) { minEval = result.score; bestMove = m; }
+      beta = Math.min(beta, minEval);
+      if (beta <= alpha) break;
+    }
+    return { score: minEval, move: bestMove };
+  }
+}
+
+function chessAIMove() {
+  if (chess.gameOver) return;
+  const color = chess.turn;
+  const maximizing = color === 'b'; // black wants high score
+  document.getElementById('chess-status').textContent = 'AI thinking...';
+
+  setTimeout(() => {
+    const result = minimax(chess.board, chess.depth, -Infinity, Infinity, maximizing, color);
+    if (result.move) {
+      chessDoMove(result.move.from[0], result.move.from[1], result.move.to[0], result.move.to[1]);
+    } else {
+      // Fallback random
+      const moves = getAllLegalMoves(color);
+      if (moves.length) {
+        const m = moves[Math.floor(Math.random()*moves.length)];
+        chessDoMove(m.from[0], m.from[1], m.to[0], m.to[1]);
+      }
+    }
+  }, 100);
+}
+
+</script>
+</body>
+</html>
